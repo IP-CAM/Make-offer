@@ -1,0 +1,535 @@
+<!--/*
+ * @support
+ * http://www.opensourcetechnologies.com/contactus.html
+ * sales@opensourcetechnologies.com
+* */-->
+<modification>
+	<id>Make Offer</id>
+	<version>1.0.0</version>
+	<vqmver>2.x</vqmver>
+	<author>OST</author>
+
+<!-- Add DB Field in select query ! -->
+	<file name="catalog/model/catalog/product.php">
+		<operation>
+            <search position="replace"><![CDATA[SELECT DISTINCT *, pd.name AS name, p.image]]></search>
+            <add><![CDATA[SELECT DISTINCT *, pd.name AS name, p.image,p.offerprice]]></add>
+        </operation>
+		<operation>
+            <search position="after"><![CDATA['viewed'           => $query->row['viewed']]]></search>
+            <add><![CDATA[,'offerprice'       => $query->row['offerprice']]]></add>
+        </operation>
+	</file>	
+
+<!-- Start Showing on Featured Products module -->	
+<!-- Add text in module language file ! -->	
+<file name="catalog/language/english/module/featured.php">
+		<operation>
+            <search position="after"><![CDATA[$_['text_tax']      = 'Ex Tax:';]]></search>
+            <add><![CDATA[$_['text_makeoffer']           = 'Make Offer';]]></add>
+        </operation>
+</file>	
+
+<!-- Add language Fields in module controller ! -->
+<file name="catalog/controller/module/featured.php">
+		<operation>
+            <search position="after"><![CDATA[$data['button_compare'] = $this->language->get('button_compare');]]></search>
+            <add><![CDATA[$data['text_makeoffer'] = $this->language->get('text_makeoffer');
+            $data['makeoffer_status'] = $this->config->get('makeoffer_status');]]></add>
+        </operation>        
+
+<!-- Add discount Field in category controller ! -->
+		<operation>
+            <search position="before"><![CDATA[$data['products'][] = array(]]></search>
+            <add><![CDATA[
+				$discount_query = $this->model_catalog_product->getProductDiscounts($product_info['product_id']);
+				$discounts = array();
+				foreach ($discount_query as $discount) {
+					$discounts[] = array(
+						'quantity' => $discount['quantity'],
+						'price'    => $this->currency->format($this->tax->calculate($discount['price'], $product_info['tax_class_id'], $this->config->get('config_tax')))
+					);
+				}]]></add>
+        </operation>
+        
+<!-- Add offerprice Field in category controller ! -->
+		<operation>
+            <search position="after"><![CDATA['price'       => $price,]]></search>
+            <add><![CDATA['offerprice'  => $product_info['offerprice'],
+            'discounts'   => $discounts,]]></add>
+        </operation>
+</file>
+
+<!-- Create Make Offer label on Module Page ! -->        
+	<file name="catalog/view/theme/*/template/module/featured.tpl">
+		<operation>
+            <search position="replace"><![CDATA[<div class="image">]]></search>
+            <add><![CDATA[<div class="image" style="position:relative">]]></add>
+        </operation>
+		<operation>
+            <search position="replace" index="1"><![CDATA[<a href="<?php echo $product['href']; ?>">]]></search>
+		<add><![CDATA[<a href="<?php echo $product['href']; ?>"><?php if($makeoffer_status == 1 && $product['offerprice']>0  && !$product['special'] && !$product['discounts']) { ?>
+		<div class="makeoffer" style="position:absolute;top:80%;left:0;padding:8px;width:100%;box-sizing:border-box;text-align:center;color:#fff;background:#ff9933">
+		<b><?php echo $text_makeoffer; ?></b></div>
+			<?php } ?>]]></add>
+        </operation>
+	</file>	
+	
+<!-- End Showing on Featured Products module -->
+
+<!-- Start Showing on Latest And Bestseller Products module -->	
+<!-- Add text in module language file ! -->	
+<file name="catalog/language/english/module/latest.php,catalog/language/english/module/bestseller.php">
+		<operation>
+            <search position="after"><![CDATA[$_['text_tax']      = 'Ex Tax:';]]></search>
+            <add><![CDATA[$_['text_makeoffer']           = 'Make Offer';]]></add>
+        </operation>
+</file>	
+
+<!-- Add language Fields in module controller ! -->
+<file name="catalog/controller/module/latest.php,catalog/controller/module/bestseller.php">
+		<operation>
+            <search position="after"><![CDATA[$data['button_compare'] = $this->language->get('button_compare');]]></search>
+            <add><![CDATA[$data['text_makeoffer'] = $this->language->get('text_makeoffer');
+            $data['makeoffer_status'] = $this->config->get('makeoffer_status');]]></add>
+        </operation>        
+
+<!-- Add discount Field in category controller ! -->
+		<operation>
+            <search position="before"><![CDATA[$data['products'][] = array(]]></search>
+            <add><![CDATA[
+				$discount_query = $this->model_catalog_product->getProductDiscounts($result['product_id']);
+				$discounts = array();
+				foreach ($discount_query as $discount) {
+					$discounts[] = array(
+						'quantity' => $discount['quantity'],
+						'price'    => $this->currency->format($this->tax->calculate($discount['price'], $result['tax_class_id'], $this->config->get('config_tax')))
+					);
+				}]]></add>
+        </operation>
+        
+<!-- Add offerprice Field in category controller ! -->
+		<operation>
+            <search position="after"><![CDATA['price'       => $price,]]></search>
+            <add><![CDATA['offerprice'  => $result['offerprice'],
+            'discounts'   => $discounts,]]></add>
+        </operation>
+</file>
+
+<!-- Create Make Offer label on Module Page ! -->        
+	<file name="catalog/view/theme/*/template/module/latest.tpl,catalog/view/theme/*/template/module/bestseller.tpl">
+		<operation>
+            <search position="replace"><![CDATA[<div class="image">]]></search>
+            <add><![CDATA[<div class="image" style="position:relative">]]></add>
+        </operation>
+		<operation>
+            <search position="replace" index="1"><![CDATA[<a href="<?php echo $product['href']; ?>">]]></search>
+		<add><![CDATA[<a href="<?php echo $product['href']; ?>"><?php if($makeoffer_status == 1 && $product['offerprice']>0  && !$product['special'] && !$product['discounts']) { ?>
+		<div class="makeoffer" style="position:absolute;top:80%;left:0;padding:8px;width:100%;box-sizing:border-box;text-align:center;color:#fff;background:#ff9933">
+		<b><?php echo $text_makeoffer; ?></b></div>
+			<?php } ?>]]></add>
+        </operation>
+	</file>	
+	
+<!-- End Showing on Latest Products module -->	
+
+<!-- Add text in category language file ! -->	
+	<file name="catalog/language/english/product/category.php,catalog/language/english/product/search.php">
+		<operation>
+            <search position="after"><![CDATA[$_['text_limit']        = 'Show:';]]></search>
+            <add><![CDATA[$_['text_makeoffer']           = 'Make Offer';]]></add>
+        </operation>
+	</file>	
+
+	<file name="catalog/controller/product/category.php,catalog/controller/product/search.php">
+<!-- Add language Fields in category controller ! -->
+		<operation>
+            <search position="after"><![CDATA[$data['button_grid'] = $this->language->get('button_grid');]]></search>
+            <add><![CDATA[$data['text_makeoffer'] = $this->language->get('text_makeoffer');
+            $data['makeoffer_status'] = $this->config->get('makeoffer_status');]]></add>
+        </operation>
+
+<!-- Add discount Field in category controller ! -->
+		<operation>
+            <search position="before"><![CDATA[data['products'][] = array(]]></search>
+            <add><![CDATA[
+				$discount_query = $this->model_catalog_product->getProductDiscounts($result['product_id']);
+				$discounts = array();
+				foreach ($discount_query as $discount) {
+					$discounts[] = array(
+						'quantity' => $discount['quantity'],
+						'price'    => $this->currency->format($this->tax->calculate($discount['price'], $result['tax_class_id'], $this->config->get('config_tax')))
+					);
+				}]]></add>
+        </operation>
+        
+<!-- Add offerprice Field in category controller ! -->
+		<operation>
+            <search position="after"><![CDATA['price'       => $price,]]></search>
+            <add><![CDATA['offerprice'  => $result['offerprice'],
+            'discounts'   => $discounts,]]></add>
+        </operation>
+	</file>
+
+<!-- Create Make Offer label on category Page ! -->        
+	<file name="catalog/view/theme/*/template/product/category.tpl,catalog/view/theme/*/template/product/search.tpl">
+		<operation>
+            <search position="replace"><![CDATA[<div class="image">]]></search>
+            <add><![CDATA[<div class="image" style="position:relative">]]></add>
+        </operation>
+		<operation>
+            <search position="replace" index="1"><![CDATA[<a href="<?php echo $product['href']; ?>">]]></search>
+		<add><![CDATA[<a href="<?php echo $product['href']; ?>"><?php if($makeoffer_status == 1 && $product['offerprice']>0  && !$product['special'] && !$product['discounts']) { ?>
+		<div class="makeoffer" style="position:absolute;top:80%;left:0;padding:8px;width:100%;box-sizing:border-box;text-align:center;color:#fff;background:#ff9933">
+		<b><?php echo $text_makeoffer; ?></b></div>
+			<?php } ?>]]></add>
+        </operation>
+	</file>
+<!-- Add text in product language file ! -->	
+	<file name="catalog/language/english/product/product.php">
+		<operation>
+            <search position="after"><![CDATA[$_['error_rating']             = 'Warning: Please select a review rating!';]]></search>
+            <add><![CDATA[$_['text_makeoffer']           = 'Make Offer';
+$_['btn_makeoffer']            = 'Make Offer';
+$_['entry_offerprice']         = 'Enter OFFER Price';]]></add>
+        </operation>
+	</file>	
+	
+	<file name="catalog/controller/product/product.php">
+<!-- Add language Fields in controller ! -->
+		<operation>
+            <search position="before"><![CDATA[$data['tab_description'] = $this->language->get('tab_description');]]></search>
+            <add><![CDATA[$data['text_makeoffer'] = $this->language->get('text_makeoffer');
+			$data['btn_makeoffer'] = $this->language->get('btn_makeoffer');
+			$data['entry_offerprice'] = $this->language->get('entry_offerprice');
+			$data['offerprice'] = '';
+			$data['makeoffer_type'] = $this->config->get('makeoffer_type');
+			$data['makeoffer_status'] = $this->config->get('makeoffer_status');
+			$data['makeoffer_attempts'] = $this->config->get('makeoffer_attempts');]]></add>
+        </operation>
+
+<!-- Get minimum price from db in controller ! -->        
+		<operation>
+            <search position="before"><![CDATA[$data['review_status'] = $this->config->get('config_review_status');]]></search>
+            <add><![CDATA[if ($product_info['offerprice']) {
+				$data['minprice'] = $product_info['offerprice'];
+			} else {
+				$data['minprice'] = 0;
+			}]]></add>
+        </operation>
+<!-- convert min percent to min price -->
+		<operation>
+            <search position="before"><![CDATA[$data['tags'] = array();]]></search>
+            <add><![CDATA[if($data['makeoffer_type'] == 1){
+				$mprice = $data['minprice'];
+					$symbol = $this->currency->getSymbolLeft($this->session->data['currency']);
+					if($symbol==''){
+						$symbol = $this->currency->getSymbolRight($this->session->data['currency']);
+					}
+				$orgprice = str_replace($symbol,'',$product_info['price']);				
+				$min = ($mprice * 100)/$orgprice;
+				$data['minprice'] = (100-$min);
+			}]]></add>
+        </operation>        
+        
+<!-- Add Currency Symbol before price in controller ! -->        
+		<operation>
+            <search position="before"><![CDATA[public function index() {]]></search>
+            <add><![CDATA[public function addsymbol() {
+					$offerprice = $_POST['offerprice'];
+					$symbol = $this->currency->getSymbolLeft($this->session->data['currency']);
+					if($symbol==''){
+						$symbol = $this->currency->getSymbolRight($this->session->data['currency']);
+					}
+					
+					$json = $this->currency->format($offerprice);
+			
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($json));				
+            }
+            
+            public function calpercent() {
+				$orgprice1	= $_POST['orgprice'];
+				$offerprice = $_POST['offerprice'];
+					$symbol = $this->currency->getSymbolLeft($this->session->data['currency']);
+					if($symbol==''){
+						$symbol = $this->currency->getSymbolRight($this->session->data['currency']);
+					}
+					$orgprice = str_replace($symbol,'',$orgprice1);
+					$per = ($offerprice*100)/$orgprice;
+					$offerper = 100-$per;
+					$json = $offerper;
+				
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($json));				
+            }
+            
+            public function removesymbol() {
+				$orgprice	= $_POST['orgprice'];
+					$symbol = $this->currency->getSymbolLeft($this->session->data['currency']);
+					if($symbol==''){
+						$symbol = $this->currency->getSymbolRight($this->session->data['currency']);
+					}
+					$orgprice = str_replace($symbol,'',$orgprice);
+					$json = $orgprice;
+				$this->response->addHeader('Content-Type: application/json');
+				$this->response->setOutput(json_encode($json));				
+            }]]></add>
+        </operation>
+	</file>        
+	<file name="catalog/view/theme/*/template/product/product.tpl">
+		
+<!-- Add Model Dialog on Product Page ! -->        
+		<operation>
+            <search position="after"><![CDATA[<div id="content" class="<?php echo $class; ?>"><?php echo $content_top; ?>]]></search>
+            <add><![CDATA[<!-- Mohit Add Popup Modal -->
+<div class="modal fade" id="bsModal3" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" style="width:600px;">
+        <div class="modal-content">
+			<div class="modal-header" id="contenthead"></div>			
+            <div class="modal-body" id="contentadd" style="padding:20px;"></div>
+            <div class="modal-footer" style="margin-top:0px;padding:10px 20px 10px">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div><!-- End Popup Modal -->]]></add>
+        </operation> 		
+<!-- Create id for price on product Page ! -->        
+		<operation>
+            <search position="replace"><![CDATA[<h2><?php echo $price; ?></h2>]]></search>
+            <add><![CDATA[<h2 id="price"><?php echo $price; ?></h2>]]></add>
+        </operation>     
+<!-- Create Make Offer Input in on product Page ! -->        
+		<operation>
+            <search position="before" index="3"><![CDATA[<?php if ($review_status) { ?>]]></search>
+            <add><![CDATA[<?php if($makeoffer_status == 1 && $minprice>0 && empty($special) && empty($discount)) { ?>
+            <div class="form-group" id="makeoffer">
+              <label class="control-label" for="input-quantity">
+					<?php echo $entry_offerprice; ?>
+				</label>
+				<input type="hidden" name="orgprice" value="<?php echo $price; ?>" id="input-orgprice" class="form-control" />
+				<input type="hidden" name="offertype" value="<?php echo $makeoffer_type; ?>" id="input-offertype" class="form-control" />
+				<input type="hidden" name="attempts" value="<?php echo $makeoffer_attempts; ?>" id="input-attempts" class="form-control" />
+				<input type="hidden" name="minprice" value="<?php echo $minprice; ?>" id="input-minprice" class="form-control" />
+				<input type="hidden" name="offerprice" value="<?php echo $offerprice; ?>" id="input-offerprice" class="form-control" />
+				<input type="text" name="chkofferprice" value="<?php echo $offerprice; ?>" id="input-chkofferprice" class="form-control" />
+              <br />
+              <button type="button" id="btn_makeoffer" data-loading-text="<?php echo $text_loading; ?>" class="btn btn-primary btn-lg btn-block"><?php echo $btn_makeoffer; ?></button>
+            </div>
+            <?php } ?>]]></add>
+        </operation>
+
+<!-- Jquery for checking offer price range ! --> 
+<operation>
+<search position="before" index="1"><![CDATA[<script type="text/javascript"><!--]]></search>
+<add><![CDATA[<script type="text/javascript"><!--
+$(document).ready(function(){
+	var count = 0;
+	$('#btn_makeoffer').click(function(){
+	count++;
+	var attempts =  Number($('#input-attempts').val());
+
+	if(count<=attempts){
+		var price = $("#input-orgprice").val();
+		var offertype = $("#input-offertype").val();
+		var mp = Number($('#input-minprice').val());
+		var cop = Number($('#input-chkofferprice').val());
+
+		$.ajax({
+				url : 'index.php?route=product/product/removesymbol',
+				type: 'post',
+				dataType: 'json',
+				data: {'orgprice':price},
+				success: function(json) {
+					var orgprice = json;
+					orgprice = Number(orgprice);
+					
+		if(cop >= mp && cop <= orgprice) {
+			$("#input-offerprice").val(cop);
+			var op = cop;
+								
+			if(cop < mp) {
+				showReject(attempts);
+			}else if(cop >= mp && cop <= orgprice){
+				showAccept();
+				$.ajax({
+					url : 'index.php?route=product/product/addsymbol',
+					type: 'post',
+					dataType: 'json',
+					data: {'offerprice':op},
+					success: function(json) {
+						$("#price").text(json);
+						$("#input-chkofferprice").attr('readonly','readonly');
+						$("#input-chkofferprice").css("cursor", "not-allowed");
+					},
+				});
+			}else if(cop > orgprice) {
+				showOverReject();
+			}					
+		}else if(cop < mp){
+			showReject(attempts);
+		}else if(cop > orgprice) {
+				showOverReject();
+			}
+				},		
+			});
+		
+		
+	}else{
+			$('#btn_makeoffer').attr('disabled','disabled');
+			showMaxAttempt(attempts);
+		}	
+	});
+});
+//--></script>
+//--><script>
+       function showReject(attempts)
+       {
+          	$("#contenthead").html('<b>Price Rejected !</b>');
+          	$("#contentadd").html('<div class="alert alert-danger"><i class="fa fa-check-circle"></i>Your Price is Rejected.The amount offered is lower than our Minimum. You have maximum ' + attempts + ' offer attempts total. Please evaluate the offer amount and make another offer.</div>');
+			$("#bsModal3").modal('show');
+       }
+       function showAccept()
+       {
+          	$("#contenthead").html('<b>Price Accepted !</b>');
+          	$("#contentadd").html('<div class="alert alert-success"><i class="fa fa-check-circle"></i>Price Accepted. I accept the offer you made and adjusted the price in the cart. Please continue shopping or go to the cart and checkout. The price at checkout will be the price we agreed upon.</div>');
+			$("#bsModal3").modal('show');
+       }       
+       function showOverReject()
+       {
+          	$("#contenthead").html('<b>Price Rejected !</b>');
+          	$("#contentadd").html('<div class="alert alert-danger"><i class="fa fa-check-circle"></i>Your Price is Rejected.We appreciate the offer but the offer you made is greater than the listed price.</div>');
+			$("#bsModal3").modal('show');
+       }
+       function showMaxAttempt(attempts)
+       {
+          	$("#contenthead").html('<b>Maximum Attempts !</b>');
+          	$("#contentadd").html('<div class="alert alert-danger"><i class="fa fa-check-circle"></i>You have attempted maximum ' + attempts + ' times !</div>');
+			$("#bsModal3").modal('show');
+       }       
+//--></script>]]></add>
+        </operation>
+ 
+		<operation>
+            <search position="replace"><![CDATA['#product input[type=\'text\'], #product input[type=\'hidden\'], #product input[type=\'radio\']:checked, #product input[type=\'checkbox\']:checked, #product select, #product textarea']]></search>
+            <add><![CDATA['#product input[type=\'text\'], #product input[type=\'hidden\'], #product input[type=\'radio\']:checked, #product input[type=\'checkbox\']:checked, #product select, #product textarea, #makeoffer input[type=\'text\'], #makeoffer input[type=\'hidden\']']]></add>
+        </operation>        
+	</file>
+	
+<!-- Get Offer Price at Cart Controller ! -->
+	<file name="catalog/controller/checkout/cart.php">
+		<operation>
+            <search position="after" offset="1"><![CDATA[$product_info = $this->model_catalog_product->getProduct($product_id);]]></search>
+            <add><![CDATA[$data['makeoffer_type'] = $this->config->get('makeoffer_type');
+			if(isset($this->request->post['minprice']))
+				$minprice = $this->request->post['minprice'];
+				 $offerprice = $product_info['price'];
+            
+            if((isset($this->request->post['offerprice'])) && (!empty($this->request->post['offerprice']))
+					&& ($this->request->post['offerprice'] >= $minprice))
+				{
+					$offerprice = $this->request->post['offerprice'];
+					$this->session->data['offerprice'][$product_id] = $offerprice;
+				}
+			else{
+					unset($this->session->data['offerprice'][$product_id] );
+				}]]></add>
+        </operation>
+        
+<!-- Add new parameter offerprice-->        
+	<operation>
+      <search position="replace"><![CDATA[$this->cart->add($this->request->post['product_id'], $quantity, $option, $recurring_id);]]></search>
+		<add><![CDATA[if (isset($this->request->post['option'])) {
+			$this->cart->addnew($this->request->post['product_id'], $quantity, $option, $recurring_id, $offerprice);
+		}else{
+			$this->cart->add($this->request->post['product_id'], $quantity, $option, $recurring_id);
+		}]]></add>
+	</operation> 
+	        
+	</file>	
+	
+<!-- Replace Price with Offer Price in Library cart ! -->
+	<file name="system/library/cart.php">
+		<operation>
+            <search position="replace"><![CDATA[$price = $product_query->row['price'];]]></search>
+            <add><![CDATA[$productid = $product_query->row['product_id'];
+			if(isset($cart['offerprice']) && $cart['offerprice'] >0){
+				$price = $cart['offerprice'];
+			}elseif (isset($this->session->data['offerprice'][$productid])) {
+				$price = $this->session->data['offerprice'][$productid];
+			}else{
+				$price = $product_query->row['price'];
+			}]]></add>
+        </operation>
+<!-- Add new function for inserting option products -->
+		<operation>
+            <search position="before"><![CDATA[public function update($cart_id, $quantity) {]]></search>
+            <add><![CDATA[public function addnew($product_id, $quantity = 1, $option = array(), $recurring_id = 0, $offerprice) {
+		$query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "cart WHERE customer_id = '" . (int)$this->customer->getId() . "' AND session_id = '" . $this->db->escape($this->session->getId()) . "' AND product_id = '" . (int)$product_id . "' AND recurring_id = '" . (int)$recurring_id . "' AND `option` = '" . $this->db->escape(json_encode($option)) . "' AND offerprice = '" . $offerprice . "' ");
+
+		if (!$query->row['total']) {
+			$this->db->query("INSERT " . DB_PREFIX . "cart SET customer_id = '" . (int)$this->customer->getId() . "', session_id = '" . $this->db->escape($this->session->getId()) . "', product_id = '" . (int)$product_id . "', recurring_id = '" . (int)$recurring_id . "', `option` = '" . $this->db->escape(json_encode($option)) . "', quantity = '" . (int)$quantity . "', date_added = NOW() , offerprice = '" . $offerprice . "' ");
+		} else {
+			$this->db->query("UPDATE " . DB_PREFIX . "cart SET quantity = (quantity + " . (int)$quantity . ") WHERE customer_id = '" . (int)$this->customer->getId() . "' AND session_id = '" . $this->db->escape($this->session->getId()) . "' AND product_id = '" . (int)$product_id . "' AND recurring_id = '" . (int)$recurring_id . "' AND `option` = '" . $this->db->escape(json_encode($option)) . "' AND offerprice = '" . $offerprice . "' ");
+		}
+	}]]></add>
+        </operation>	
+	</file>
+
+<!-- Admin Changes -->	
+
+<!-- Add Offer Price text in language file in Admin Section ! -->
+<file name="admin/language/english/catalog/product.php">
+	<operation>
+		<search position="after"><![CDATA[$_['error_keyword']          = 'SEO keyword already in use!';]]></search>
+		<add><![CDATA[// Make Offer
+		$_['entry_offerprice']            = 'Make Offer Price';]]></add>
+        </operation>
+	</file>
+	
+<!-- Add Offer Price text in controller file in Admin Section ! -->
+<file name="admin/controller/catalog/product.php">
+	<operation>
+		<search position="after"><![CDATA[$data['tab_openbay'] = $this->language->get('tab_openbay');]]></search>
+		<add><![CDATA[// Make Offer
+			$data['entry_offerprice'] = $this->language->get('entry_offerprice');
+		]]></add>
+        </operation>
+        
+	<operation>
+		<search position="before"><![CDATA[if (isset($this->request->post['model'])) {]]></search>
+		<add><![CDATA[if (isset($this->request->post['offerprice'])) {
+			$data['offerprice'] = $this->request->post['offerprice'];
+		} elseif (!empty($product_info)) {
+			$data['offerprice'] = $product_info['offerprice'];
+		} else {
+			$data['offerprice'] = 0;
+		}]]></add>
+        </operation>        
+	</file>
+
+<!-- Add Offer Price in Admin Section ! -->
+<file name="admin/view/template/catalog/product_form.tpl">
+	<operation>
+		<search position="before" offset="1">
+			<![CDATA[<label class="col-sm-2 control-label" for="input-tax-class"><?php echo $entry_tax_class; ?></label>]]>
+		</search>
+		<add><![CDATA[<div class="form-group">
+			<label class="col-sm-2 control-label" for="input-offerprice"><?php echo $entry_offerprice; ?></label>
+			<div class="col-sm-10">
+				<input type="text" name="offerprice" value="<?php echo $offerprice; ?>" placeholder="<?php echo $entry_offerprice; ?>" id="input-offerprice" class="form-control" />
+			</div>
+		</div>]]></add>
+        </operation>
+	</file>
+
+<!-- Add makeoffer value in db with change query of model file in Admin Section ! -->
+<file name="admin/model/catalog/product.php">
+	<operation>
+		<search position="replace"><![CDATA[price = '" . (float)$data['price'] . "']]></search>
+		<add><![CDATA[price = '" . (float)$data['price'] . "', offerprice = '" . (int)$data['offerprice'] . "']]></add>
+	</operation>
+	
+	</file>				
+</modification>
